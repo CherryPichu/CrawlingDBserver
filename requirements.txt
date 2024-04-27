@@ -1,0 +1,10 @@
+Python 3.10.12 # this version supports a function that returns a type hint
+
+# library
+pip install sqlit3
+pip install flask == 3.0.2
+# pip install werkzeug == 3.0.1
+pip install flask-swagger-ui == 4.11.1
+pip install install flask-cors == 4.0.0
+
+pip install flask-cors

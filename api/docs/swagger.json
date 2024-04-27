@@ -1,0 +1,149 @@
+{
+    "swagger" : "2.0",
+    "info" : {
+        "version" : "1.0.0",
+        "title" : "Crawling DB Test",
+        "decription" : "다크웹 크롤링 수업"
+    },
+    "host" : "uskawjdu.iptime.org:8001",
+    "basePath" : "/",
+    "schemes": ["http", "https"],
+    "paths" : {
+        "/isCrawlingByUrl" : {
+            "get" : {
+                "summary" : "GET /isCrawlingByUrl?url={target}",
+                "parameters" : [
+                    {
+                        "name" : "url",
+                        "in" : "query",
+                        "required" : true,
+                        "type" : "string",
+                        "description" : "검사할 URL",
+                        "default": "naver.com"
+                    }
+                ],
+                "responses" : {
+                    "200" : {
+                        "description" : "successful 200",
+                        "schema" : {
+                            "tpye" : "object",
+                            "properties" : {
+                                "iscrawling" :{
+                                    "type" : "boolean",
+                                    "example" : true
+                                } 
+                            }
+                        }
+                    },
+                    "404" : {
+                        "description" : "fall 404",
+                        "schema" : {
+                            "tpye" : "object",
+                            "properties" : {
+                                "iscrawling" :{
+                                    "type" : "boolean",
+                                    "example" : false
+                                } 
+                            }
+                        }
+                    }
+                } 
+            }
+        },
+        "/postData" : {
+            "post" : {
+                "summary" : "POST /postData",
+                "parameters" : [
+                    {
+                        "in": "body",
+                        "name": "userData",
+                        "description": "User data object that needs to be submitted to the server.",
+                        "required": true,
+                        "schema": {
+                          "type": "object",
+                          "required": [
+                            "origin_url",
+                            "parameter",
+                            "title",
+                            "url",
+                            "domain",
+                            "HTML",
+                            "isCrawling"
+                          ],
+                          "properties": {
+                            "origin_url": {
+                              "type": "string",
+                              "example": "origin_url"
+                            },
+                            "parameter": {
+                              "parameter": "string",
+                              "example": "parameter"
+                            },
+                            "title": {
+                              "parameter": "string",
+                              "example": "title"
+                            },
+                            "url": {
+                              "parameter": "string",
+                              "example": "url"
+                            },
+                            "domain": {
+                                "parameter": "string",
+                                "example": "domain"
+                            },
+                            "HTML": {
+                              "parameter": "string",
+                              "example": "HTML"
+                            },
+                            "isCrawling": {
+                              "parameter": "boolean",
+                              "example": true
+                            }
+                          }
+                        }
+                    }
+                ],
+                "responses" : {
+                    "200" : {
+                        "description" : "successful 200",
+                        "schema" : {
+                            "tpye" : "object",
+                            "properties" : {
+                                "iscrawling" :{
+                                    "type" : "boolean",
+                                    "example" : true
+                                } 
+                            }
+                        }
+                    },
+                    "404" : {
+                        "description" : "fall 404",
+                        "schema" : {
+                            "tpye" : "object",
+                            "properties" : {
+                                "iscrawling" :{
+                                    "type" : "boolean",
+                                    "example" : false
+                                } 
+                            }
+                        }
+                    }
+                } 
+            }
+        },
+        "/getLast10Data" : {
+            "get" : {
+                "summary" : "GET /getLast10Data",
+                "responses" : {
+                    "200" : {
+                        "description" : "successful 200"
+                    },
+                    "404" : {
+                        "description" : "fall 404"
+                    }
+                }  
+            }
+        }
+    }
+    
+}
