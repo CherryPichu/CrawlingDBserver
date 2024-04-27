@@ -3,10 +3,11 @@ import sqlite3
 """ 테이블 정보
     NAME : HTML_FILES
         id integer primary key autoincrement, \
-        origin_url varchar(50) not null \
-        parameter varchar(50) not null \
+        origin_url varchar(50) not null, \
+        parameter varchar(50) not null, \
         title varchar(50) not null, \
         url varchar(50) not null, \
+        domain varchar(50) not null,  \
         HTML TEXT, \
         isCrawling boolean not null)" \
 """
@@ -17,13 +18,9 @@ import sqlite3
 
 DB_TABLE_NAME = "HTML_FILES"
 class DBConn :
-    def __new__(cls, *args, **kwargs) :
-        """ 싱글톤 패턴 """
-        if not hasattr(cls, "_instace") :
-            cls._instace = super().__new__(cls)
-        return cls._instace
     def __init__(self, dbName : str = "db.db" ) :
-        self.conn = sqlite3.connect("./db/" + dbName)
+        self.dbName = dbName
+        self.conn = sqlite3.connect("./db/" + dbName, timeout=1)
         
     ## db
     """
@@ -96,14 +93,14 @@ class HtmlFileManager :
         self.createTable()
         
         
-    def __new__(cls, *args, **kwargs) :
-        """ 
-        싱글톤 패턴
-        ref : https://wikidocs.net/69361 
-        """
-        if not hasattr(cls, "_instace") :
-            cls._instace = super().__new__(cls)
-        return cls._instace
+    # def __new__(cls, *args, **kwargs) :
+    #     """ 
+    #     싱글톤 패턴
+    #     ref : https://wikidocs.net/69361 
+    #     """
+    #     if not hasattr(cls, "_instace") :
+    #         cls._instace = super().__new__(cls)
+    #     return cls._instace
     
     def __del__(self) :
         pass
