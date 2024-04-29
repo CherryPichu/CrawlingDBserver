@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, Blueprint, send_from_directory
-from flask import render_template, request
+from flask import render_template, request, render_template_string
 from flask_cors import CORS
 from db import HtmlFileManager
 from flask import abort
@@ -7,17 +7,14 @@ from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import cross_origin
 #cmd : export FLASK_DEBUG=1
 # flask run --port=8001 --host="0.0.0.0"
-# PORT = 8001
-PORT = 5000
+import json
+PORT = 8001
+# PORT = 5000
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # 정적 파일 캐시 비활성화
 CORS(app)
 # CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
-
-@app.route("/")
-def hello_world() :
-    return "Hello world"
 
 @app.route("/isCrawlingByUrl", methods=["GET"])
 def getIsCrawlingByUrl() :
@@ -57,24 +54,40 @@ def postData() :
     url = data.get("url")
     domain = data.get("domain")
     HTML = data.get("HTML")
+    wordlist = data.get("wordlist")
     isCrawling = data.get("isCrawling")
+    
+    # print(data)
+    
+    try :
+        wordlist = wordlist.strip("[]")
+        wordlist = [word.strip(" '").strip(" \"") for word in wordlist.split(', ')]
+    except :
+        print("에러")
+        abort(404)
+        
+    # print()
+    # print( wordlist )
+    # print( type(wordlist) )
+        
+
     # isCrawling = True
     if url == None :
         abort(404)
     
-    dbHtml = HtmlFileManager() # 싱글톤
+    dbHtml = HtmlFileManager()
+    
     isSuccessful : bool = dbHtml.insertIntoTable(origin_url, parameter, title,
-                                        url, domain, HTML, isCrawling)
+                                        url, domain, HTML, wordlist, isCrawling)
     
     data : dict = {"isSuccessful" : isSuccessful}
-    
-    # if isSuccessful == False :
-    #     return jsonify(data), 404
+    if isSuccessful == False :
+        return jsonify(data), 404
     
     return jsonify(data), 200
 
 @app.route("/getLast10Data", methods=["Get"])
-def getLast30Data() :
+def getLast10Data() :
     dbHtml = HtmlFileManager() # 싱글톤
     data : list = dbHtml.getLastAllSelect(10)
     
@@ -82,6 +95,13 @@ def getLast30Data() :
         return abort(404)
     
     return jsonify(data), 200
+
+
+@app.route('/')
+def homepage():
+    with open('./site/viewer.html', 'r', encoding='utf-8') as file:
+        html_content = file.read()
+    return render_template_string(html_content)
     
     
 # ==== swagger 설정 서버 동작과 상관 없음 ====
@@ -94,6 +114,7 @@ swaggerui_blueprint = get_swaggerui_blueprint(
         'app_name' : "Test Craling db application"
     },
 )
+
 @app.route("/api/docs/swagger.json")
 @cross_origin()  # 이 라우트에 대해 CORS 허용
 def send_swagger_json():

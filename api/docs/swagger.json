@@ -95,6 +95,10 @@
                               "parameter": "string",
                               "example": "HTML"
                             },
+                            "wordlist": {
+                              "parameter": "string",
+                              "example": "['단어1', '단어2', '단어3', '단어4']"
+                            },
                             "isCrawling": {
                               "parameter": "boolean",
                               "example": true

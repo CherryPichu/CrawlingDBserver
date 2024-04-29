@@ -1,5 +1,5 @@
 import sqlite3
-
+import json
 """ 테이블 정보
     NAME : HTML_FILES
         id integer primary key autoincrement, \
@@ -88,7 +88,8 @@ class HtmlFileManager :
         self.OFFSET_title = 4
         self.OFFSET_URL = 5
         self.OFFSET_HTML = 6
-        self.OFFSET_ISCRAWLING = 7
+        self.OFFSET_wordlist = 7
+        self.OFFSET_ISCRAWLING = 8
         
         self.createTable()
         
@@ -121,21 +122,26 @@ class HtmlFileManager :
             title varchar(50) not null, \
             url varchar(50) not null, \
             domain varchar(50) not null,  \
-            HTML TEXT, \
-            isCrawling boolean not null)" \
+            HTML TEXT not null, \
+            wordlist TEXT not null, \
+            isCrawling boolean not null, \
+            createAt datetime DEFAULT CURRENT_TIMESTAMP)" \
             % (self.DB_TABLE_NAME)
             
         self.dbcon.query(sql , ())
         
     def insertIntoTable(self, origin_url: str, parameter: str, title : str, 
-                        url : str, domain : str, html : str, is_crawling : bool) -> bool  :
+                        url : str, domain : str, html : str, wordlist : list, is_crawling : bool) -> bool  :
         # 만약 같은 url 이 is_craling = True 상태면 insert 를 하지 않음
-        if self.getIsCrawlingUrl(url) :
+        if self.getIsCrawlingUrl(origin_url) :
             print("중복된 url")
-            # return False
+            return False
         
-        sql = "INSERT INTO %s (origin_url, parameter, title, url, domain,  HTML, isCrawling) values (?, ?, ?, ?, ?, ?, ?)" % (self.DB_TABLE_NAME)
-        cursor = self.dbcon.query(sql, (origin_url, parameter, title, url, domain, html, is_crawling))
+        wordlist = json.dumps(wordlist)
+                
+        sql = "INSERT INTO %s (origin_url, parameter, title, url, domain,  HTML, wordlist, isCrawling) values (?, ?, ?, ?, ?, ?, ?, ?)" % (self.DB_TABLE_NAME)
+        cursor = self.dbcon.query(sql, (origin_url, parameter, title, url, domain, html,wordlist, is_crawling))
+        
 
         if cursor.rowcount != 0 :
             return True
@@ -153,6 +159,10 @@ class HtmlFileManager :
         print("successful")
         
     
+    def __apply_load(self, wordlist) :
+            
+            return  
+    
     def getLastAllSelect(self, number : int) -> list :
         """
         
@@ -166,11 +176,16 @@ class HtmlFileManager :
         cursor = self.dbcon.query(sql, ())
         result = cursor.fetchall()
         
+        
+        for i in range(len(result)) :
+                result[i] = list(result[i])
+                result[i][self.OFFSET_wordlist] = json.loads( result[i][self.OFFSET_wordlist] )
+
         return result
     
     def getIsCrawlingUrl(self, url :str) -> True:
         url = url.strip()
-        sql = "select * from %s WHERE url = ? ORDER BY id DESC" % (self.DB_TABLE_NAME)
+        sql = "select * from %s WHERE origin_url = ? ORDER BY id DESC" % (self.DB_TABLE_NAME)
         cursor = self.dbcon.query(sql, (url, ))
         result = cursor.fetchall()
         
@@ -187,15 +202,17 @@ class HtmlFileManager :
     # def set(self) :
 
 
+
 ## ====== TEST CODE ======
 if __name__ =="__main__" :
     
+    
     dbhtml = HtmlFileManager()
-    dbhtml.dropTable()
+    # dbhtml.dropTable()
     dbhtml.createTable()
     
-    dbhtml.insertIntoTable("origin_url", "parameter", "title", "naver.com2","domain", "html",  True)
-    dbhtml.insertIntoTable("origin_url2", "parameter2", "title2", "url","domain", "html",  True)
+    dbhtml.insertIntoTable("origin_url", "parameter", "title", "naver.com2","domain", "html", ["문자열1", "문자열2"] , True)
+    # dbhtml.insertIntoTable("origin_url2", "parameter2", "title2", "url","domain", "html",  True)
     # print( dbhtml.getLastOneSelect() )
     
     print( dbhtml.getLastAllSelect(10) )

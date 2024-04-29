@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>문자열 빈도수 그래프</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #myChart {
+            width: 600px; /* 그래프의 너비를 조절 */
+            height: 400px; /* 그래프의 높이를 조절 */
+        }
+    </style>
+</head>
+<body>
+    <h1>문자열 빈도수 Top 20</h1>
+    <canvas id="myChart"></canvas>
+    <script>
+        // 데이터를 로드합니다.
+        async function loadData() {
+            try {
+                const response = await fetch('http://uskawjdu.iptime.org:8001/getLast10Data');
+                const data = await response.json();
+
+                // 6번째 컬럼의 데이터 추출 및 카운트
+                const counts = {};
+                data.forEach(row => {
+                    if (Array.isArray(row[7])) { // 7번째 인덱스(코드에 맞춰 수정 필요)
+                        row[7].forEach(item => {
+                            if (typeof item === 'string') {
+                                counts[item] = counts[item] ? counts[item] + 1 : 1;
+                            }
+                        });
+                    }
+                });
+
+                // 빈도수 기준으로 정렬하고 상위 20개 항목 추출
+                const sortedItems = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+                const labels = sortedItems.map(item => item[0]);
+                const frequencies = sortedItems.map(item => item[1]);
+
+                // 차트 생성
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '빈도수',
+                            data: frequencies,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(153, 102, 255, 0.2)',
+                                'rgba(255, 159, 64, 0.2)',
+                                'rgba(199, 199, 199, 0.2)',
+                                'rgba(83, 102, 255, 0.2)',
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(100, 100, 200, 0.2)',
+                                'rgba(90, 180, 172, 0.2)',
+                                'rgba(180, 100, 100, 0.2)',
+                                'rgba(160, 90, 245, 0.2)',
+                                'rgba(245, 130, 48, 0.2)',
+                                'rgba(145, 30, 180, 0.2)',
+                                'rgba(70, 240, 240, 0.2)',
+                                'rgba(240, 50, 230, 0.2)',
+                                'rgba(210, 245, 60, 0.2)',
+                                'rgba(250, 190, 190, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)',
+                                'rgba(199, 199, 199, 1)',
+                                'rgba(83, 102, 255, 1)',
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(100, 100, 200, 1)',
+                                'rgba(90, 180, 172, 1)',
+                                'rgba(180, 100, 100, 1)',
+                                'rgba(160, 90, 245, 1)',
+                                'rgba(245, 130, 48, 1)',
+                                'rgba(145, 30, 180, 1)',
+                                'rgba(70, 240, 240, 1)',
+                                'rgba(240, 50, 230, 1)',
+                                'rgba(210, 245, 60, 1)',
+                                'rgba(250, 190, 190, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('데이터 로드 중 에러 발생:', error);
+            }
+        }
+
+        // 페이지 로드 시 데이터 로드 실행
+        window.onload = loadData;
+    </script>
+</body>
+</html>
