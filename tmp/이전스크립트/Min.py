@@ -8,7 +8,7 @@ def visit_onion(onion_url):
         "https" : "socks5h://uskawjdu.iptime.org:9050"
     }
     try:
-        response = requests.get(onion_url, proxies=proxies, allow_redirects=True)
+        response = requests.get(onion_url, proxies=proxies, allow_redirects=True, verify=False)
         response.close()
     except Exception as e:
         print(onion_url, e)
@@ -60,7 +60,8 @@ def visit_onion(onion_url):
         }
         # print(row)
         response = requests.post("http://uskawjdu.iptime.org:8001/postData", json=row)
-        print(response.text)
+        # print(response.text)
+        response.close()
         
         if( response.status_code != 200) :
             return False

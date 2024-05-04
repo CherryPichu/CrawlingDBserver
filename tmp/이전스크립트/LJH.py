@@ -13,7 +13,7 @@ def visit_onion(onion_url):
     db_input = []
     
     try:
-        response = requests.get(onion_url, proxies=proxies, allow_redirects=True)
+        response = requests.get(onion_url, proxies=proxies, allow_redirects=True, verify=False)
         response.close()
     except Exception as e:
         print(onion_url, e)

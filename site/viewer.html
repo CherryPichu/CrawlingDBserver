@@ -12,6 +12,13 @@
     </style>
 </head>
 <body>
+    <h3> meta</h3>
+    마지막 업데이트 : <span id="date"></span>  <br>
+    마지막 크롤링 Origin_URL : <span id="url"></span> <br>
+    크롤링한 html 수 : <span id="size"></span> <br>
+    
+    <hr>
+
     <h1>문자열 빈도수 Top 20</h1>
     <canvas id="myChart"></canvas>
     <script>
@@ -21,11 +28,30 @@
                 const response = await fetch('http://uskawjdu.iptime.org:8001/getLast10Data');
                 const data = await response.json();
 
+                const dateSpan = document.getElementById("date");
+                var dateString = data[0][9];
+                var originalDate = new Date(dateString);
+                originalDate.setHours(originalDate.getHours() + 9);
+                dateString = originalDate.toLocaleTimeString(); 
+
+
+                // span 요소에 문자열을 설정합니다.
+                dateSpan.textContent = dateString;
+                const sizeSpan = document.getElementById("size");
+                var sizeString = data[0][0];
+                sizeSpan.textContent = sizeString;
+
+                const urlSpan = document.getElementById("url");
+                var urlString = data[0][1];
+                urlSpan.textContent = urlString;
+
+
+
                 // 6번째 컬럼의 데이터 추출 및 카운트
                 const counts = {};
                 data.forEach(row => {
                     if (Array.isArray(row[7])) { // 7번째 인덱스(코드에 맞춰 수정 필요)
-                        row[7].forEach(item => {
+                        row[7].forEach(item => {   
                             if (typeof item === 'string') {
                                 counts[item] = counts[item] ? counts[item] + 1 : 1;
                             }
@@ -33,6 +59,7 @@
                     }
                 });
 
+                
                 // 빈도수 기준으로 정렬하고 상위 20개 항목 추출
                 const sortedItems = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
                 const labels = sortedItems.map(item => item[0]);

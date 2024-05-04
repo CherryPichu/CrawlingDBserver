@@ -27,8 +27,8 @@ def visit_onion(onion_urls, depth, folder):
         
         current_time = datetime.datetime.now()
         elapsed_time = (current_time - start_time).total_seconds()
-        if elapsed_time >= 30:
-            print("20초 이상 경과했습니다. 함수를 종료합니다.")
+        if elapsed_time >= 40:
+            print("40초 이상 경과했습니다. 함수를 종료합니다.")
             return
         
         
@@ -51,7 +51,7 @@ def visit_onion(onion_urls, depth, folder):
 
         
         try:
-            response = requests.post(onion_url, proxies=proxies, headers=headers, json=data, allow_redirects=True)
+            response = requests.post(onion_url, proxies=proxies, headers=headers, json=data, allow_redirects=True, verify=False)
             response.close()
         except Exception as e:
             # print(onion_url, e)
@@ -98,6 +98,7 @@ def visit_onion(onion_urls, depth, folder):
                             json=data)
                     # print(response.text)
                     response.close()
+                    
                 except Exception as e:
                     print("오류")
             

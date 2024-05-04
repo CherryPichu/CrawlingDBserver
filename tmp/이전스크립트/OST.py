@@ -25,7 +25,7 @@ def visit_onion(onion_link, depth, max_depth, parent_link):
             continue
         
         try:
-            response = requests.get(child_url, proxies=proxies)
+            response = requests.get(child_url, proxies=proxies, verify=False)
             response.close()
         except Exception as e:
             print(f"requests1 에러 발생: {e}")

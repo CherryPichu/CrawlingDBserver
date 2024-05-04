@@ -88,13 +88,14 @@ def postData() :
 
 @app.route("/getLast10Data", methods=["Get"])
 def getLast10Data() :
-    dbHtml = HtmlFileManager() # 싱글톤
+    dbHtml = HtmlFileManager()
     data : list = dbHtml.getLastAllSelect(10)
     
     if data == None or len(data) == 0:
         return abort(404)
     
     return jsonify(data), 200
+
 
 
 @app.route('/')
