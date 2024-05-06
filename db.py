@@ -21,6 +21,7 @@ class DBConn :
     def __init__(self, dbName : str = "db.db" ) :
         self.dbName = dbName
         self.conn = sqlite3.connect("./db/" + dbName, timeout=1)
+        # self.conn.execute('UPDATE URL SET ownership = FALSE')
         
     ## db
     """
@@ -38,22 +39,6 @@ class DBConn :
         self.conn.commit()
 
         return cursor
-    
-    def insert(self, sql : str, parameter : list) :
-        cursor = self.conn.cursor()
-        cursor.execute(sql, parameter)
-        id = cursor.lastrowid # 뭔지 모르겠음
-        self.conn.commit() # 반영
-        cursor.close()
-        
-        return id
-    
-    def update(self, sql : str, parameter : list) :
-        cursor = self.query(sql, parameter)
-        rowcount = cursor.rowcount
-        self.conn.commit()
-        cursor.close()
-        return rowcount
     
     
     def fetch(self, sql : str, parameter : list) :
@@ -78,13 +63,15 @@ class HtmlFileManager :
         self.dbcon = DBConn(dbName)
         self.OFFSET_ID = 0
         self.OFFSET_origin_url = 1
-        self.OFFSET_origin_parameter = 2
-        self.OFFSET_parameter = 3
-        self.OFFSET_title = 4
-        self.OFFSET_URL = 5
+        self.OFFSET_parameter = 2
+        self.OFFSET_title = 3
+        self.OFFSET_URL = 4
+        self.OFFSET_DOMAIN = 5
         self.OFFSET_HTML = 6
         self.OFFSET_wordlist = 7
-        self.OFFSET_ISCRAWLING = 8
+        self.OFFSET_referer = 8
+        self.OFFSET_CREATEAT = 9
+        
         
         self.createTable()
         
@@ -119,29 +106,26 @@ class HtmlFileManager :
             domain varchar(50) not null,  \
             HTML TEXT not null, \
             wordlist TEXT not null, \
+            referer varchar(50) not null, \
             createAt datetime DEFAULT CURRENT_TIMESTAMP)" \
             % (self.DB_TABLE_NAME)
             
         self.dbcon.query(sql , ())
         
     def insertIntoTable(self, origin_url: str, parameter: str, title : str, 
-                        url : str, domain : str, html : str, wordlist : list) -> bool  :
+                        url : str, domain : str, html : str, wordlist : list, referer : str) -> bool  :
         # 만약 같은 url 이 is_craling = True 상태면 insert 를 하지 않음
         if self.getIsCrawlingUrl(origin_url) :
             print("중복된 url")
-            return False
+            # return False
         
         wordlist = json.dumps(wordlist)
                 
-        sql = "INSERT INTO %s (origin_url, parameter, title, url, domain,  HTML, wordlist, isCrawling) values (?, ?, ?, ?, ?, ?, ?, ?)" % (self.DB_TABLE_NAME)
-        cursor = self.dbcon.query(sql, (origin_url, parameter, title, url, domain, html,wordlist))
+        sql = "INSERT INTO %s (origin_url, parameter, title, url, domain,  HTML, wordlist, referer) values (?, ?, ?, ?, ?, ?, ?, ?)" % (self.DB_TABLE_NAME)
+        cursor = self.dbcon.query(sql, (origin_url, parameter, title, url, domain, html, wordlist, referer))
         
-
         if cursor.rowcount != 0 :
             return True
-        
-        
-        
     
     def dropTable(self) -> None :
         r = input("Are you sure that you drop a %s talbe? Y or N : ".format(self.DB_TABLE_NAME))
@@ -184,15 +168,15 @@ class HtmlFileManager :
         cursor = self.dbcon.query(sql, (url, ))
         result = cursor.fetchall()
         
-        return bool( sum([i[self.OFFSET_ISCRAWLING] for i in result]) ) 
+        return bool( len([_ for _ in result]) ) 
     
-    def getIsCrawlingTitle(self, title : str) -> True: # Not test
-        title = title.strip()
-        sql = "select * from %s WHERE Title = ? ORDER BY id DESC" % (self.DB_TABLE_NAME)
-        cursor = self.dbcon.query(sql, (title, ))
-        result = cursor.fetchall()
+    # def getIsCrawlingTitle(self, title : str) -> True: # Not test
+    #     title = title.strip()
+    #     sql = "select * from %s WHERE Title = ? ORDER BY id DESC" % (self.DB_TABLE_NAME)
+    #     cursor = self.dbcon.query(sql, (title, ))
+    #     result = cursor.fetchall()
         
-        return bool( sum([i[self.OFFSET_ISCRAWLING] for i in result]) ) 
+    #     return bool( sum([i[self.OFFSET_ISCRAWLING] for i in result]) ) 
 
 class UrlManager :
     def __init__(self, dbName : str = "db.db" ) :
@@ -201,8 +185,9 @@ class UrlManager :
         self.OFFSET_ID = 0
         self.OFFSET_URL = 1
         self.OFFSET_ISCRAWLING = 2
-        self.OFFSET_CREATEAT = 3
-        self.OFFSET_UPDATEAT = 4
+        self.OFFSET_OWNERSHIP = 3
+        self.OFFSET_CREATEAT = 4
+        self.OFFSET_UPDATEAT = 5
         
         self.createTable()
         
@@ -222,6 +207,7 @@ class UrlManager :
             id integer primary key autoincrement, \
             url varchar(50) not null, \
             isCrawling boolean not null, \
+            ownership boolean not null, \
             createAt datetime DEFAULT CURRENT_TIMESTAMP, \
             updateAt datetime DEFAULT CURRENT_TIMESTAMP)" \
             % (self.DB_TABLE_NAME)
@@ -246,21 +232,22 @@ class UrlManager :
             
             self.dbcon.query(update_trigger_query, ())
         
+
+    def insertIntoTable(self, url : str, isCrawling : bool, ownership : bool = False) -> bool  :
         """
          이 함수는 이미 DB에 등록된 URL의 경우 아무런 처리를 하지 않습니다.
          isCrawling 상태를 변경하기 원할경우 updateTable을 이용하세요
         """
-    def insertIntoTable(self, url : str, isCrawling : bool) -> bool  :
         if self.findByUrl(url) != None :
             return False
-        sql = "INSERT INTO %s (url, isCrawling) values (?, ?)" % (self.DB_TABLE_NAME)
-        cursor = self.dbcon.query(sql, (url, isCrawling))
+        sql = "INSERT INTO %s (url, isCrawling, ownership) values (?, ?, ?)" % (self.DB_TABLE_NAME)
+        cursor = self.dbcon.query(sql, (url, isCrawling, ownership))
         
         if cursor.rowcount != 0 :
             return True
         return False
     
-    def updateTableByUrl(self, url : str, isCrawling : bool) -> bool :
+    def updateByUrl(self, url : str, isCrawling : bool) -> bool :
         if self.findByUrl(url) == None :
             return False
         sql = "UPDATE %s SET isCrawling = ? WHERE url = ?"% (self.DB_TABLE_NAME)
@@ -270,14 +257,29 @@ class UrlManager :
             return True
         return False
     
+    def updateById(self, id : str, isCrawling : bool) -> bool :
+        if self.findById(id) == None :
+            return False
+        sql = "UPDATE %s SET isCrawling = ? WHERE id = ?"% (self.DB_TABLE_NAME)
+        cursor = self.dbcon.query(sql, (isCrawling, id))
+
+        if cursor.rowcount != 0 :
+            return True
+        return False
+    
     def findByUrl(self, url : str) -> list :
         sql = "select * from %s WHERE url = ? LIMIT 1" % (self.DB_TABLE_NAME)
         cursor = self.dbcon.query(sql, (url, ))
         result = cursor.fetchone()
             
-        
         return result
-        
+    
+    def findById(self, id : str) -> list :
+        sql = "select * from %s WHERE id = ? LIMIT 1" % (self.DB_TABLE_NAME)
+        cursor = self.dbcon.query(sql, (id, ))
+        result = cursor.fetchone()
+            
+        return result
     
     def dropTable(self) -> None :
         r = input("Are you sure that you drop a %s talbe? Y or N : ".format(self.DB_TABLE_NAME))
@@ -289,16 +291,25 @@ class UrlManager :
         
         print("successful")
         
-    def getOnionUrl(self) -> tuple :
-        # 1순위. 크롤링이 되지 않은 URL 을 가져온다.
+    def updateOwnership(self, dbIndex : int, ownership : bool) :
+        sql = "update %s SET ownership = ? WHERE id = ?" % (self.DB_TABLE_NAME)
+        self.dbcon.query(sql, (ownership, dbIndex))
+        
+    def getOnionUrl(self, dbIndex : int) -> tuple :
+        if dbIndex >= 0 : # 이미 점유중인 index 해제
+            self.updateOwnership(dbIndex, False)
+        
+        # 1순위. 크롤링이 되지 않은 URL 을 가져온다. ORDER BY RANDOM() / ORDER BY createAt
         sql = """
-            Select * from %s WHERE isCrawling = FALSE ORDER BY createAt DESC LIMIT 1;
+            Select * from %s WHERE isCrawling = FALSE AND ownership = FALSE ORDER BY RANDOM() DESC LIMIT 1;
         """% (self.DB_TABLE_NAME)
         cursor = self.dbcon.query(sql, ())
         result = cursor.fetchone()
         
         if result != None :
-            return result[self.OFFSET_URL]
+            ## ownership = True 설정
+            self.updateOwnership(result[self.OFFSET_ID], True)
+            return result[self.OFFSET_ID], result[self.OFFSET_URL] 
         
         # # # 2순위. UpdateAt 날짜가 가장 늦은 놈을 가져온다.
         sql = """
@@ -307,7 +318,8 @@ class UrlManager :
         cursor = self.dbcon.query(sql, ())
         result = cursor.fetchone()
         
-        return result[self.OFFSET_URL]
+        self.updateOwnership(result[self.OFFSET_ID], True)
+        return result[self.OFFSET_ID], result[self.OFFSET_URL] 
         
         
         
@@ -319,7 +331,7 @@ if __name__ =="__main__" :
     
     
     dbhtml = HtmlFileManager()
-    # dbhtml.dropTable()
+    dbhtml.dropTable()
     # dbhtml.createTable()
     
     # dbhtml.insertIntoTable("origin_url", "parameter", "title", "naver.com2","domain", "html", ["문자열1", "문자열2"] , True)
@@ -330,19 +342,16 @@ if __name__ =="__main__" :
     # print(dbhtml.getIsCrawlingUrl("naver.com"))
     
     urldb = UrlManager()
+    urldb.dbcon.conn.execute('UPDATE URL SET ownership = FALSE')
+    urldb.dbcon.conn.execute('UPDATE URL SET isCrawling = FALSE')
+    urldb.dbcon.conn.commit()
     # urldb.dropTable()
     # urldb.insertIntoTable("naver.com4", True)
-    res = urldb.updateTableByUrl("naver.com4", False)
+    # res = urldb.updateTableByUrl("naver.com4", False)
     # print(res)
     
-    print( urldb.getLastOneSelect() )
+    # print( urldb.getLastOneSelect() )
     # print( urldb.getOnionUrl() )
-    
-    print( )
-    
-    
-
-
 
 
 

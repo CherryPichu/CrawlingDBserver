@@ -25,11 +25,12 @@
         // 데이터를 로드합니다.
         async function loadData() {
             try {
-                const response = await fetch('http://uskawjdu.iptime.org:8001/getLast10Data');
+                const response = await fetch('http://uskawjdu.iptime.org:8001/getLast5000Data');
                 const data = await response.json();
 
+
                 const dateSpan = document.getElementById("date");
-                var dateString = data[0][9];
+                var dateString = data[0][5];
                 var originalDate = new Date(dateString);
                 originalDate.setHours(originalDate.getHours() + 9);
                 dateString = originalDate.toLocaleTimeString(); 
@@ -38,20 +39,19 @@
                 // span 요소에 문자열을 설정합니다.
                 dateSpan.textContent = dateString;
                 const sizeSpan = document.getElementById("size");
-                var sizeString = data[0][0];
+                var sizeString = data.length;
                 sizeSpan.textContent = sizeString;
 
                 const urlSpan = document.getElementById("url");
-                var urlString = data[0][1];
+                var urlString = data[0][0];
                 urlSpan.textContent = urlString;
-
 
 
                 // 6번째 컬럼의 데이터 추출 및 카운트
                 const counts = {};
                 data.forEach(row => {
-                    if (Array.isArray(row[7])) { // 7번째 인덱스(코드에 맞춰 수정 필요)
-                        row[7].forEach(item => {   
+                    if (Array.isArray(row[3])) { // 7번째 인덱스(코드에 맞춰 수정 필요)
+                        row[3].forEach(item => {   
                             if (typeof item === 'string') {
                                 counts[item] = counts[item] ? counts[item] + 1 : 1;
                             }

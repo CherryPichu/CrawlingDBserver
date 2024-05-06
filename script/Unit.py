@@ -8,41 +8,43 @@ from datetime import datetime
     
 """
 class Unit :
-    STOP = 0
-    RUNNING = 1
-    BUG = 2
+    def __init__(self, unitName : str) :
+        
+        self.STOP : int= 0
+        self.RUNNING : int= 1
+        self.BUG : int= 2
     
-    def __init__(self, id : int, unitName : str) :
-        self.__processId = id
         self.name = unitName
         self.__url = ""
+        self.__dbIndex = -1
         self.__state = self.STOP
         self.craeteAt = datetime.now()
-        
-    # def setState(self, state) :
-    #     if(state == self.STOP) :
-    #         self.__state = self.STOP
-    #     elif(state == self.RUNNING) :
-    #         self.__state = self.RUNNING
-    #     elif(state == self.BUG) :
-    #         self.__state = self.BUG
-            
+
     def getState(self) :
         return self.__state
     
-    def getUnitId(self) :
-        return self.__processId
         
-    def activate(self, url) :
+
+    def getUrlRow(self) -> list :
+        """
+        [0] : dbIndex
+        [1] : name
+        """
+        return [self.__dbIndex,  self.__url]
+        
+    def activate(self, dbIndex : int, url : str) :
         self.__state = self.RUNNING
         self.__url = url
+        self.__dbIndex = dbIndex
     
     def terminate(self) :
         self.__state = self.STOP
+        self.__url = ""
+        self.__dbIndex = -1
         
     def __str__(self) :
-        result = "Unit ID : %d \nstate : %s \nname : %s\nurl : %s" \
-            % (self.processId, self.__state, self.name, self.__url)
+        result = "Unit Name : %d \nstate : %s \nurl : %s" \
+            % (self.name, self.__state, self.__url)
             
         return result
 
